@@ -1,0 +1,11 @@
+Django
+psycopg2-binary
+celery
+django-cors-headers
+requests
+beautifulsoup4
+django-redis
+gunicorn
+whitenoise
+django-celery-beat
+openai
