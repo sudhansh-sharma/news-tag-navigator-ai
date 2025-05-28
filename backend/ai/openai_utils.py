@@ -5,7 +5,7 @@ def analyze_news_with_gpt(news_list):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise ValueError("OPENAI_API_KEY not set in environment")
-    openai.api_key = api_key
+    client = openai.OpenAI(api_key=api_key)
     prompt = (
         "You are a financial news AI assistant. "
         "Analyze the following news items for stock market relevance and sentiment. "
@@ -44,14 +44,13 @@ def analyze_news_with_gpt(news_list):
         "}\n"
         f"News: {news_list}"
     )
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.2,
     )
-    # You may need to parse the response content as JSON
     import json
     try:
-        return json.loads(response.choices[0].message["content"])
+        return json.loads(response.choices[0].message.content)
     except Exception:
         return {"signals": [], "news": []} 

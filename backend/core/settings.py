@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'scrapy',
     'django_celery_beat',
+    'ai'
 ]
 
 MIDDLEWARE = [
