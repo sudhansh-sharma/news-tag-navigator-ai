@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Filter, TrendingUp, TrendingDown } from 'lucide-react';
@@ -10,6 +9,8 @@ import { toast } from '@/hooks/use-toast';
 import NewsCard from '@/components/NewsCard';
 import FilterSidebar from '@/components/FilterSidebar';
 import StatsOverview from '@/components/StatsOverview';
+import SignalsSection from '@/components/SignalsSection';
+import type { Signal } from '@/components/SignalCard';
 
 export interface NewsArticle {
   id: string;
@@ -34,6 +35,37 @@ const Index = () => {
   const [selectedStocks, setSelectedStocks] = useState<string[]>([]);
   const [selectedSentiment, setSelectedSentiment] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Mock signals data
+  const mockSignalsData: Signal[] = [
+    {
+      id: '1',
+      type: 'buy',
+      symbol: 'AAPL',
+      price: 175.50,
+      timestamp: '2024-01-15T10:30:00Z',
+      confidence: 'high',
+      reason: 'Strong earnings beat with positive guidance for Q1 2024'
+    },
+    {
+      id: '2',
+      type: 'sell',
+      symbol: 'TSLA',
+      price: 210.25,
+      timestamp: '2024-01-15T09:45:00Z',
+      confidence: 'medium',
+      reason: 'Technical indicators showing overbought conditions'
+    },
+    {
+      id: '3',
+      type: 'entry',
+      symbol: 'NVDA',
+      price: 495.80,
+      timestamp: '2024-01-15T08:15:00Z',
+      confidence: 'high',
+      reason: 'AI sector momentum with breakthrough in chip technology'
+    }
+  ];
 
   // Mock data for demonstration - replace with actual API call
   const mockNewsData: NewsArticle[] = [
@@ -191,6 +223,9 @@ const Index = () => {
 
         {/* Stats Overview */}
         <StatsOverview articles={newsArticles} />
+
+        {/* Signals Section */}
+        <SignalsSection signals={mockSignalsData} />
 
         {/* Search Bar */}
         <div className="mb-8">
