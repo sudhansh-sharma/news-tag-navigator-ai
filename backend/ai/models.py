@@ -4,7 +4,7 @@ from scrapy.models import NewsStory
 # Create your models here.
 
 class Signal(models.Model):
-    SIGNAL_TYPES = (('buy', 'Buy'), ('sell', 'Sell'))
+    SIGNAL_TYPES = (('buy', 'Buy'), ('sell', 'Sell'), ('entry', 'Entry'))
     news_story = models.ForeignKey(NewsStory, on_delete=models.CASCADE)
     type = models.CharField(max_length=10, choices=SIGNAL_TYPES)
     symbol = models.CharField(max_length=10)
