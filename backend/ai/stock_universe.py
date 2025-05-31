@@ -5,43 +5,52 @@ import logging
 from typing import Dict, List, Optional, Tuple, Any
 import os
 from .stock_universe_chromadb_ingest import ingest_stock_universe
+import time
 
 logger = logging.getLogger(__name__)
 
 class StockUniverse:
-    def __init__(self, csv_path: str, test_mode: bool = False):
+    def __init__(self, csv_path: str):
         """
         Initialize the stock universe from a CSV file.
         
         Args:
             csv_path: Path to the CSV file containing stock information
-            test_mode: Whether to run in test mode (uses test data paths)
         """
         logger.info(f"Loading stock universe from {csv_path}")
+        if not os.path.exists(csv_path):
+            raise FileNotFoundError(f"Stock universe CSV not found at {csv_path}")
+        
         self.csv_path = csv_path
         self.stocks_df = pd.read_csv(csv_path)
         logger.info(f"Loaded {len(self.stocks_df)} stocks")
         self.stocks_df['CompanyName'] = self.stocks_df['CompanyName'].str.lower()
         self.stocks_df['Industry'] = self.stocks_df['Industry'].str.lower()
         
-        # Initialize ChromaDB
-        self.test_mode = test_mode
-        self.chroma_path = 'test_data/chroma_stock_universe' if test_mode else 'data/chroma_stock_universe'
-        self.collection_name = 'stock_universe'
+        # Initialize ChromaDB client
+        self.client = None
+        self.collection = None
+        self._init_chromadb()
         
-        try:
-            self.client = chromadb.Client(Settings(persist_directory=self.chroma_path))
-            
-            # Check if collection exists
-            if self.collection_name not in [c.name for c in self.client.list_collections()]:
-                logger.warning(f"ChromaDB collection {self.collection_name} not found at {self.chroma_path}")
-                self.collection = None
-            else:
-                self.collection = self.client.get_collection(self.collection_name)
-                logger.info(f"Successfully loaded ChromaDB collection from {self.chroma_path}")
-        except Exception as e:
-            logger.warning(f"Failed to initialize ChromaDB: {e}")
-            self.collection = None
+    def _init_chromadb(self, max_retries: int = 3, retry_delay: int = 5):
+        """Initialize ChromaDB connection with retries."""
+        for attempt in range(max_retries):
+            try:
+                self.client = chromadb.HttpClient(
+                    host=os.getenv('CHROMA_SERVER_HOST', 'chromadb'),
+                    port=int(os.getenv('CHROMA_SERVER_PORT', 8000))
+                )
+                self.collection = self.client.get_collection("stock_universe")
+                logger.info("Successfully connected to ChromaDB collection")
+                return
+            except Exception as e:
+                logger.warning(f"Attempt {attempt + 1}/{max_retries} failed to connect to ChromaDB: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay)
+        
+        logger.error("Failed to connect to ChromaDB after all retries")
+        self.client = None
+        self.collection = None
         
     def find_matching_stocks(self, company_names: List[str], industries: List[str] = None) -> List[Dict]:
         """

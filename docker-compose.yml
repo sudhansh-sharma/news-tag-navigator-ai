@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3.8'
 
 services:
   db:
@@ -25,6 +25,7 @@ services:
       dockerfile: Dockerfile.backend
     volumes:
       - ./backend:/app
+      - ./data:/app/data
     ports:
       - "8000:8000"
       - "8080:8080"
@@ -38,9 +39,18 @@ services:
       - DJANGO_DB_PASSWORD=${DJANGO_DB_PASSWORD}
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - CHROMA_SERVER_HOST=chromadb
+      - CHROMA_SERVER_PORT=8000
+      - APP_DATA_DIR=/app/data
     depends_on:
-      - db
-      - redis
+      chromadb_init:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
 
   scheduler:
     build:
@@ -50,6 +60,7 @@ services:
     command: celery -A core beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - ./backend:/app
+      - ./data:/app/data
     env_file:
       - .env
     environment:
@@ -59,9 +70,16 @@ services:
       - DJANGO_DB_PASSWORD=${DJANGO_DB_PASSWORD}
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - CHROMA_SERVER_HOST=chromadb
+      - CHROMA_SERVER_PORT=8000
+      - APP_DATA_DIR=/app/data
     depends_on:
-      - backend
-      - redis
+      chromadb_init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
 
   worker:
     build:
@@ -71,6 +89,7 @@ services:
     command: celery -A core worker -l info
     volumes:
       - ./backend:/app
+      - ./data:/app/data
     env_file:
       - .env
     environment:
@@ -80,9 +99,16 @@ services:
       - DJANGO_DB_PASSWORD=${DJANGO_DB_PASSWORD}
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - CHROMA_SERVER_HOST=chromadb
+      - CHROMA_SERVER_PORT=8000
+      - APP_DATA_DIR=/app/data
     depends_on:
-      - backend
-      - redis
+      chromadb_init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
 
   frontend:
     build:
@@ -93,5 +119,47 @@ services:
     depends_on:
       - backend
 
+  chromadb:
+    image: chromadb/chroma:latest
+    volumes:
+      - chroma_data:/chroma/data
+    ports:
+      - "8000:8000"
+    environment:
+      - ALLOW_RESET=true
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_PORT=8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - app-network
+
+  chromadb_init:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    entrypoint: [""]
+    command: python -c "from ai.stock_universe_chromadb_ingest import ingest_stock_universe; ingest_stock_universe()"
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    environment:
+      - CHROMA_SERVER_HOST=chromadb
+      - CHROMA_SERVER_PORT=8000
+      - APP_DATA_DIR=/app/data
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    networks:
+      - app-network
+
 volumes:
-  postgres_data: 
+  postgres_data:
+  chroma_data:
+
+networks:
+  app-network:
+    driver: bridge 

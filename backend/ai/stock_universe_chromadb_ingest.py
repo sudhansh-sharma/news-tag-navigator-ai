@@ -1,48 +1,65 @@
 import os
 import pandas as pd
 import chromadb
-from chromadb.config import Settings
 import logging
-from typing import Optional
+import time
+import sys
 
 logger = logging.getLogger(__name__)
 
-def get_chroma_paths(test_mode: bool = False) -> tuple[str, str]:
-    """Get paths for CSV and ChromaDB based on mode."""
-    if test_mode:
-        return 'test_data/stock_universe.csv', 'test_data/chroma_stock_universe'
-    # Use shared volume path for production
-    return '/shared_data/stock_universe.csv', '/shared_data/chroma_stock_universe'
+def wait_for_chromadb(max_retries: int = 30, retry_delay: int = 2) -> bool:
+    """Wait for ChromaDB to be ready."""
+    for attempt in range(max_retries):
+        try:
+            client = chromadb.HttpClient(
+                host=os.getenv('CHROMA_SERVER_HOST', 'chromadb'),
+                port=int(os.getenv('CHROMA_SERVER_PORT', 8000))
+            )
+            # Try a simple operation
+            client.list_collections()
+            logger.info("ChromaDB is ready")
+            return True
+        except Exception as e:
+            logger.info(f"Waiting for ChromaDB to be ready (attempt {attempt + 1}/{max_retries})")
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay)
+    
+    logger.error("ChromaDB failed to become ready")
+    return False
 
-def ingest_stock_universe(test_mode: bool = False) -> bool:
+def ingest_stock_universe() -> bool:
     """
     Ingest stock universe data into ChromaDB.
     Only creates the database if it doesn't exist.
     
-    Args:
-        test_mode: Whether to use test data paths
-        
     Returns:
         bool: True if successful, False otherwise
     """
-    csv_path, chroma_path = get_chroma_paths(test_mode)
-    
-    # Check if ChromaDB already exists
-    if os.path.exists(chroma_path):
-        logger.info(f"ChromaDB already exists at {chroma_path}")
-        return True
+    # Wait for ChromaDB to be ready
+    if not wait_for_chromadb():
+        return False
         
     try:
-        # Create directory if it doesn't exist
-        os.makedirs(os.path.dirname(chroma_path), exist_ok=True)
+        # Get ChromaDB client
+        client = chromadb.HttpClient(
+            host=os.getenv('CHROMA_SERVER_HOST', 'chromadb'),
+            port=int(os.getenv('CHROMA_SERVER_PORT', 8000))
+        )
         
+        # Check if collection exists
+        collections = client.list_collections()
+        if any(c.name == "stock_universe" for c in collections):
+            logger.info("Stock universe collection already exists")
+            return True
+            
         # Read stock universe CSV
+        csv_path = os.path.join(os.getenv('APP_DATA_DIR', '/app/data'), 'stock_universe.csv')
         logger.info(f"Reading stock universe from {csv_path}")
+        if not os.path.exists(csv_path):
+            logger.error(f"Stock universe CSV not found at {csv_path}")
+            return False
+            
         df = pd.read_csv(csv_path)
-        
-        # Initialize ChromaDB
-        logger.info(f"Initializing ChromaDB at {chroma_path}")
-        client = chromadb.Client(Settings(persist_directory=chroma_path))
         
         # Create collection
         collection = client.create_collection(
@@ -89,5 +106,12 @@ def ingest_stock_universe(test_mode: bool = False) -> bool:
 
 if __name__ == "__main__":
     # Configure logging
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    ingest_stock_universe() 
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        stream=sys.stdout
+    )
+    
+    # Run ingestion
+    success = ingest_stock_universe()
+    sys.exit(0 if success else 1) 
