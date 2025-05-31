@@ -1,22 +1,17 @@
 #!/bin/bash
 set -e
 
+export PYTHONUNBUFFERED=1
+export PYTHONIOENCODING=UTF-8
+
+export PYTHONSTARTUP="/app/suppress_logs.py"
+
 echo "Starting Django application..."
-
-# Ensure static directory exists
-mkdir -p /app/static
-
-# Wait for database
-echo "Waiting for database..."
-while ! nc -z $DJANGO_DB_HOST 5432; do
-  sleep 0.1
-done
-echo "Database is ready!"
 
 # Run migrations
 echo "Running migrations..."
-python manage.py makemigrations --noinput
-python manage.py migrate --noinput
+python manage.py makemigrations
+python manage.py migrate
 
 # Create superuser if credentials provided
 if [ "$DJANGO_SUPERUSER_USERNAME" ] && [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then
@@ -35,4 +30,4 @@ python manage.py collectstatic --noinput --clear
 
 # Start Gunicorn
 echo "Starting Gunicorn..."
-exec gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120 
+exec gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120

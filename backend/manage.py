@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 import os
 import sys
+import logging
+
+logging.getLogger("grpc").setLevel(logging.WARNING)
+logging.getLogger("grpc._cython.cygrpc").setLevel(logging.WARNING)
+logging.getLogger("chromadb.telemetry").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')

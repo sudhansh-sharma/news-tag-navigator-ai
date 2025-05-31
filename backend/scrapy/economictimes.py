@@ -34,7 +34,7 @@ def fetch_economic_times_news():
         time_tag = story.find('time')
         p = story.find('p')
         title = a.get_text(strip=True) if a else ''
-        link = a['href'] if a and a.has_attr('href') else ''
+        link = 'https://economictimes.indiatimes.com' + a['href'] if a and a.has_attr('href') else ''
         dt_str = time_tag['datetime'] if time_tag and time_tag.has_attr('datetime') else ''
         dt = parse_datetime(dt_str) if dt_str else timezone.now()
         description = p.get_text(strip=True) if p else ''

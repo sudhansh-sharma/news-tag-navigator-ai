@@ -27,6 +27,20 @@ def wait_for_chromadb(max_retries: int = 30, retry_delay: int = 2) -> bool:
     logger.error("ChromaDB failed to become ready")
     return False
 
+def warmup_chromadb_model():
+    """Trigger a dummy semantic query to force the model download and cache."""
+    try:
+        client = chromadb.HttpClient(
+            host=os.getenv('CHROMA_SERVER_HOST', 'chromadb'),
+            port=int(os.getenv('CHROMA_SERVER_PORT', 8000))
+        )
+        collection = client.get_collection("stock_universe")
+        # Dummy query to trigger model download
+        collection.query(query_texts=["warmup"], n_results=1)
+        logger.info("ChromaDB model warmup query completed.")
+    except Exception as e:
+        logger.warning(f"ChromaDB warmup query failed: {e}")
+
 def ingest_stock_universe() -> bool:
     """
     Ingest stock universe data into ChromaDB.
@@ -50,6 +64,7 @@ def ingest_stock_universe() -> bool:
         collections = client.list_collections()
         if any(c.name == "stock_universe" for c in collections):
             logger.info("Stock universe collection already exists")
+            warmup_chromadb_model()
             return True
             
         # Read stock universe CSV
@@ -98,6 +113,7 @@ def ingest_stock_universe() -> bool:
         )
         
         logger.info("Successfully ingested stock universe into ChromaDB")
+        warmup_chromadb_model()
         return True
         
     except Exception as e:
