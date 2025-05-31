@@ -1,17 +1,32 @@
 FROM python:3.11-slim
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DJANGO_SETTINGS_MODULE=core.settings
 
+# Set working directory
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y dos2unix bash
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        bash \
+        netcat-traditional && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY backend/requirements.txt /app/
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Install Python dependencies
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-COPY backend /app/
+# Copy application code and entrypoint script
+COPY backend .
 
-RUN chmod +x /app/entrypoint.sh && dos2unix /app/entrypoint.sh
+# Create static directory and set permissions
+RUN mkdir -p /app/static && \
+    chmod -R 755 /app/static && \
+    chmod +x /app/docker-entrypoint.sh
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+# Run entrypoint script
+ENTRYPOINT ["/bin/bash", "/app/docker-entrypoint.sh"]
