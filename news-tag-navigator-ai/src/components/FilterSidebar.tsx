@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -65,7 +64,7 @@ const FilterSidebar = ({
           </CardHeader>
           <CardContent className="space-y-2">
             {selectedSectors.map(sector => (
-              <Badge key={sector} variant="secondary" className="mr-1 mb-1">
+              <Badge key={`${sector}-sector`} variant="secondary" className="mr-1 mb-1">
                 {sector}
                 <button
                   onClick={() => handleSectorChange(sector, false)}
@@ -76,7 +75,7 @@ const FilterSidebar = ({
               </Badge>
             ))}
             {selectedStocks.map(stock => (
-              <Badge key={stock} variant="secondary" className="mr-1 mb-1">
+              <Badge key={`${stock}-stock`} variant="secondary" className="mr-1 mb-1">
                 {stock}
                 <button
                   onClick={() => handleStockChange(stock, false)}
@@ -87,7 +86,7 @@ const FilterSidebar = ({
               </Badge>
             ))}
             {selectedSentiment && (
-              <Badge variant="secondary" className="mr-1 mb-1">
+              <Badge key={`${selectedSentiment}-sentiment`} variant="secondary" className="mr-1 mb-1">
                 {selectedSentiment}
                 <button
                   onClick={() => onSentimentChange('')}
@@ -108,7 +107,7 @@ const FilterSidebar = ({
         </CardHeader>
         <CardContent className="space-y-3">
           {['positive', 'negative', 'neutral'].map((sentiment) => (
-            <div key={sentiment} className="flex items-center space-x-2">
+            <div key={`${sentiment}-sentiment`} className="flex items-center space-x-2">
               <Checkbox
                 id={sentiment}
                 checked={selectedSentiment === sentiment}
@@ -123,46 +122,50 @@ const FilterSidebar = ({
       </Card>
 
       {/* Sectors Filter */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Sectors</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 max-h-64 overflow-y-auto">
-          {sectors.map((sector) => (
-            <div key={sector} className="flex items-center space-x-2">
-              <Checkbox
-                id={sector}
-                checked={selectedSectors.includes(sector)}
-                onCheckedChange={(checked) => handleSectorChange(sector, !!checked)}
-              />
-              <label htmlFor={sector} className="text-sm cursor-pointer">
-                {sector}
-              </label>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      {sectors.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Sectors</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 max-h-64 overflow-y-auto">
+            {sectors.map((sector) => (
+              <div key={`${sector}-sector`} className="flex items-center space-x-2">
+                <Checkbox
+                  id={sector}
+                  checked={selectedSectors.includes(sector)}
+                  onCheckedChange={(checked) => handleSectorChange(sector, !!checked)}
+                />
+                <label htmlFor={sector} className="text-sm cursor-pointer">
+                  {sector}
+                </label>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stocks Filter */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Stocks</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 max-h-64 overflow-y-auto">
-          {stocks.map((stock) => (
-            <div key={stock} className="flex items-center space-x-2">
-              <Checkbox
-                id={stock}
-                checked={selectedStocks.includes(stock)}
-                onCheckedChange={(checked) => handleStockChange(stock, !!checked)}
-              />
-              <label htmlFor={stock} className="text-sm font-mono cursor-pointer">
-                {stock}
-              </label>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      {stocks.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Stocks</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 max-h-64 overflow-y-auto">
+            {stocks.map((stock) => (
+              <div key={`${stock}-stock`} className="flex items-center space-x-2">
+                <Checkbox
+                  id={stock}
+                  checked={selectedStocks.includes(stock)}
+                  onCheckedChange={(checked) => handleStockChange(stock, !!checked)}
+                />
+                <label htmlFor={stock} className="text-sm font-mono cursor-pointer">
+                  {stock}
+                </label>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

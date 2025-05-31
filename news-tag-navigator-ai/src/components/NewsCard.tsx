@@ -1,4 +1,3 @@
-
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,17 +48,18 @@ const NewsCard = ({ article }: NewsCardProps) => {
     }
   };
 
+  const sectors = article.tags?.sectors ?? [];
+  const stocks = article.tags?.stocks ?? [];
+
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200 border border-gray-200">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-semibold text-lg leading-tight line-clamp-3">{article.title}</h3>
-          {getSentimentIcon(article.tags.sentiment)}
         </div>
         <div className="flex items-center text-sm text-gray-600 gap-2">
           <Clock className="h-4 w-4" />
           <span>{formatDate(article.publishedAt)}</span>
-          <span className="text-gray-400">•</span>
           <span className="font-medium">{article.source}</span>
         </div>
       </CardHeader>
@@ -82,11 +82,11 @@ const NewsCard = ({ article }: NewsCardProps) => {
           </div>
 
           {/* Sectors */}
-          {article.tags.sectors.length > 0 && (
+          {sectors.length > 0 && (
             <div>
               <p className="text-xs font-medium text-gray-600 mb-1">SECTORS:</p>
               <div className="flex flex-wrap gap-1">
-                {article.tags.sectors.map((sector) => (
+                {sectors.map((sector) => (
                   <Badge key={sector} variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                     {sector}
                   </Badge>
@@ -96,16 +96,24 @@ const NewsCard = ({ article }: NewsCardProps) => {
           )}
 
           {/* Stocks */}
-          {article.tags.stocks.length > 0 && (
+          {stocks.length > 0 && (
             <div>
               <p className="text-xs font-medium text-gray-600 mb-1">STOCKS:</p>
               <div className="flex flex-wrap gap-1">
-                {article.tags.stocks.map((stock) => (
+                {stocks.map((stock) => (
                   <Badge key={stock} variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 font-mono">
                     {stock}
                   </Badge>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Price (if present) */}
+          {'price' in article && (
+            <div>
+              <p className="text-xs font-medium text-gray-600 mb-1">PRICE:</p>
+              <p className="text-sm text-gray-600">Rs{(article as any).price ? ` ${(article as any).price.toFixed(2)}` : ''}</p>
             </div>
           )}
         </div>
