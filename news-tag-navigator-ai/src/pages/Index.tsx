@@ -28,7 +28,7 @@ export interface NewsArticle {
   };
 }
 
-const API_BASE = 'http://localhost:8001/api';
+const API_BASE = '/api';
 
 const fetchSignals = async (): Promise<Signal[]> => {
   const res = await fetch(`${API_BASE}/signals/`);

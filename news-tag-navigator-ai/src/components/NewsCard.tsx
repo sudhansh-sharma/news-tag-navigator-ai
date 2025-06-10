@@ -113,7 +113,7 @@ const NewsCard = ({ article }: NewsCardProps) => {
           {'price' in article && (
             <div>
               <p className="text-xs font-medium text-gray-600 mb-1">PRICE:</p>
-              <p className="text-sm text-gray-600">Rs{(article as any).price ? ` ${(article as any).price.toFixed(2)}` : ''}</p>
+              <p className="text-sm text-gray-600">Rs {(article as any).price ? ` ${(article as any).price.toFixed(2)}` : ''}</p>
             </div>
           )}
         </div>

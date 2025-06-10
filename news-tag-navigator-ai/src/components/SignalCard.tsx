@@ -69,7 +69,7 @@ const SignalCard = ({ signal }: SignalCardProps) => {
             {getSignalIcon(signal.type)}
             <div>
               <h3 className="font-semibold text-lg">{signal.symbol}</h3>
-              <p className="text-sm text-gray-600">${signal.price.toFixed(2)}</p>
+              <p className="text-sm text-gray-600">Rs {signal.price.toFixed(2)}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -82,7 +82,7 @@ const SignalCard = ({ signal }: SignalCardProps) => {
       <CardContent>
         <div className="space-y-3">
           <div className="flex gap-2">
-            <Badge className={`text-xs font-semibold ${getSignalColor(signal.type)}`}>
+            <Badge className={`text-xs font-semibold Rs {getSignalColor(signal.type)}`}>
               {signal.type.toUpperCase()}
             </Badge>
             <Badge className={`text-xs ${getConfidenceColor(signal.confidence)}`}>
