@@ -49,12 +49,12 @@ flowchart TD
     -->|"Web UI"| Frontend["Frontend (React, Vite, Nginx)"]
   Frontend
     -->|"REST API"| Backend["Backend (Django, DRF, Celery)"]
-  Backend -->|"PostgreSQL"| DB[("Database\n(PostgreSQL)")]
-  Backend -->|"Redis"| Redis[("Cache/Queue\n(Redis)")]
-  Backend -->|"ChromaDB"| Chroma[("Vector DB\n(ChromaDB)")]
-  Backend -->|"OpenAI API"| OpenAI[("AI\n(OpenAI GPT-4)")]
-  Backend -->|"Celery Worker/Beat"| Celery[("Background Tasks\n(Celery)")]
-  Frontend -.->|"Static Assets"| Nginx[("Nginx\n(Static/Proxy)")]
+  Backend -->|"PostgreSQL"| DB[("Database (PostgreSQL)")]
+  Backend -->|"Redis"| Redis[("Cache/Queue (Redis)")]
+  Backend -->|"ChromaDB"| Chroma[("Vector DB (ChromaDB)")]
+  Backend -->|"OpenAI API"| OpenAI[("AI (OpenAI GPT-4)")]
+  Backend -->|"Celery Worker/Beat"| Celery[("Background Tasks (Celery)")]
+  Frontend -.->|"Static Assets"| Nginx[("Nginx (Static/Proxy)")]
   Nginx -.->|"Proxy /api"| Backend
 ```
 
